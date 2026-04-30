@@ -40,7 +40,7 @@ export function DeckScreen() {
     setDrawnCards((current) => [result.drawnCard as Card, ...current]);
   }
 
-  const latestCard = drawnCards[0];
+  const visibleDrawnCards = useMemo(() => [...drawnCards].reverse(), [drawnCards]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -62,8 +62,14 @@ export function DeckScreen() {
               </View>
 
               <View style={styles.slot}>
-                {latestCard ? (
-                  <AnimatedDrawnCard card={latestCard} />
+                {drawnCards.length > 0 ? (
+                  <View style={styles.discardStage}>
+                    {visibleDrawnCards.map((card, index) => (
+                      <View key={card.id} style={[styles.drawnCardLayer, { zIndex: index + 1 }]}>
+                        <AnimatedDrawnCard card={card} />
+                      </View>
+                    ))}
+                  </View>
                 ) : (
                   <View style={styles.emptyDiscard}>
                     <Text style={styles.emptyText}>Carta revelada</Text>
@@ -136,6 +142,18 @@ const styles = StyleSheet.create({
     minWidth: 160,
     alignItems: "center",
     gap: 14
+  },
+  discardStage: {
+    width: 156,
+    height: 224,
+    overflow: "visible"
+  },
+  drawnCardLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 156,
+    height: 224
   },
   counter: {
     color: "#EAF8F4",
