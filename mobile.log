@@ -1,0 +1,10 @@
+
+> poc-cartas@0.1.0 mobile
+> npm --workspace apps/mobile run start --localhost
+
+
+> @poc-cartas/mobile@0.1.0 start
+> expo start
+
+Starting project at C:\repos\poc_cartas\apps\mobile
+Starting Metro Bundler

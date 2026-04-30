@@ -1,0 +1,17 @@
+{
+  "name": "poc-cartas",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "mobile": "npm --workspace apps/mobile run start",
+    "server": "npm --workspace apps/server run dev",
+    "typecheck": "npm --workspaces run typecheck",
+    "lint": "npm --workspaces run lint"
+  },
+  "devDependencies": {
+    "typescript": "~5.3.3"
+  }
+}
