@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import type { Card } from "../../core/domain/Card";
 import type { Deck } from "../../core/domain/Deck";
@@ -8,10 +8,23 @@ import { AnimatedDrawnCard } from "../components/AnimatedDrawnCard";
 import { DeckStack } from "../components/DeckStack";
 import { colors } from "../theme/tokens";
 
+const cardSize = {
+  width: 156,
+  height: 224
+};
+
+type PlacedCard = {
+  card: Card;
+  x: number;
+  y: number;
+};
+
 export function DeckScreen() {
   const repository = useMemo(() => createDeckRepository(), []);
+  const tableRef = useRef<View>(null);
   const [deck, setDeck] = useState<Deck>({ cards: [] });
-  const [drawnCards, setDrawnCards] = useState<Card[]>([]);
+  const [placedCards, setPlacedCards] = useState<PlacedCard[]>([]);
+  const [tableSize, setTableSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,18 +42,54 @@ export function DeckScreen() {
     };
   }, [repository]);
 
-  function handleDraw() {
+  const clampToTable = useCallback(
+    (x: number, y: number) => ({
+      x: Math.max(0, Math.min(x, Math.max(0, tableSize.width - cardSize.width))),
+      y: Math.max(0, Math.min(y, Math.max(0, tableSize.height - cardSize.height)))
+    }),
+    [tableSize.height, tableSize.width]
+  );
+
+  function handleDeckDrop(point: { pageX: number; pageY: number }) {
     const result = drawTopCard(deck);
 
-    if (!result.drawnCard) {
+    if (!result.drawnCard || !tableRef.current) {
       return;
     }
 
-    setDeck(result.deck);
-    setDrawnCards((current) => [result.drawnCard as Card, ...current]);
+    tableRef.current.measure((_x, _y, _width, _height, pageX, pageY) => {
+      const position = clampToTable(point.pageX - pageX - cardSize.width / 2, point.pageY - pageY - cardSize.height / 2);
+
+      setDeck(result.deck);
+      setPlacedCards((current) => [
+        ...current,
+        {
+          card: result.drawnCard as Card,
+          ...position
+        }
+      ]);
+    });
   }
 
-  const visibleDrawnCards = useMemo(() => [...drawnCards].reverse(), [drawnCards]);
+  const handleMovePlacedCard = useCallback(
+    (cardId: string, position: { x: number; y: number }) => {
+      const clamped = clampToTable(position.x, position.y);
+      setPlacedCards((current) => current.map((placed) => (placed.card.id === cardId ? { ...placed, ...clamped } : placed)));
+    },
+    [clampToTable]
+  );
+
+  const handleFocusPlacedCard = useCallback((cardId: string) => {
+    setPlacedCards((current) => {
+      const selectedCard = current.find((placed) => placed.card.id === cardId);
+
+      if (!selectedCard || current[current.length - 1]?.card.id === cardId) {
+        return current;
+      }
+
+      return [...current.filter((placed) => placed.card.id !== cardId), selectedCard];
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -48,34 +97,39 @@ export function DeckScreen() {
         <View style={styles.header}>
           <Text style={styles.kicker}>Mazo espanol</Text>
           <Text style={styles.title}>POC Cartas</Text>
-          <Text style={styles.subtitle}>Toca el mazo para desapilar, mover y revelar la carta superior.</Text>
+          <Text style={styles.subtitle}>Arrastra desde el mazo para tomar la carta superior y soltarla en cualquier lugar de la mesa.</Text>
         </View>
 
-        <View style={styles.table}>
+        <View
+          ref={tableRef}
+          onLayout={(event) => {
+            setTableSize(event.nativeEvent.layout);
+          }}
+          style={styles.table}
+        >
           {loading ? (
             <ActivityIndicator color="#FFFFFF" size="large" />
           ) : (
             <View style={styles.playArea}>
-              <View style={styles.slot}>
-                <DeckStack remaining={deck.cards.length} disabled={loading} onDraw={handleDraw} />
+              {placedCards.map((placed, index) => (
+                <AnimatedDrawnCard
+                  key={placed.card.id}
+                  card={placed.card}
+                  x={placed.x}
+                  y={placed.y}
+                  zIndex={index + 1}
+                  onFocus={() => handleFocusPlacedCard(placed.card.id)}
+                  onMove={(position) => handleMovePlacedCard(placed.card.id, position)}
+                />
+              ))}
+
+              <View style={styles.deckSlot}>
+                <DeckStack remaining={deck.cards.length} disabled={loading} onDrop={handleDeckDrop} />
                 <Text style={styles.counter}>{deck.cards.length} en mazo</Text>
               </View>
 
-              <View style={styles.slot}>
-                {drawnCards.length > 0 ? (
-                  <View style={styles.discardStage}>
-                    {visibleDrawnCards.map((card, index) => (
-                      <View key={card.id} style={[styles.drawnCardLayer, { zIndex: index + 1 }]}>
-                        <AnimatedDrawnCard card={card} />
-                      </View>
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles.emptyDiscard}>
-                    <Text style={styles.emptyText}>Carta revelada</Text>
-                  </View>
-                )}
-                <Text style={styles.counter}>{drawnCards.length} reveladas</Text>
+              <View pointerEvents="none" style={styles.tableStatus}>
+                <Text style={styles.counter}>{placedCards.length} en mesa</Text>
               </View>
             </View>
           )}
@@ -131,47 +185,27 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   playArea: {
-    width: "100%",
-    paddingHorizontal: 18,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    gap: 10
+    ...StyleSheet.absoluteFillObject,
+    overflow: "hidden"
   },
-  slot: {
-    minWidth: 160,
+  deckSlot: {
+    position: "absolute",
+    left: 18,
+    bottom: 16,
     alignItems: "center",
     gap: 14
   },
-  discardStage: {
-    width: 156,
-    height: 224,
-    overflow: "visible"
-  },
-  drawnCardLayer: {
+  tableStatus: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    width: 156,
-    height: 224
+    right: 18,
+    bottom: 18,
+    borderRadius: 8,
+    backgroundColor: "rgba(7,20,33,0.18)",
+    paddingHorizontal: 12,
+    paddingVertical: 8
   },
   counter: {
     color: "#EAF8F4",
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14
-  },
-  emptyDiscard: {
-    width: 156,
-    height: 224,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.28)",
-    borderStyle: "dashed",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  emptyText: {
-    color: "rgba(255,255,255,0.72)",
     fontFamily: "Inter_600SemiBold",
     fontSize: 14
   }

@@ -6,7 +6,9 @@ Build a simple Expo + React Native proof of concept for animating a 50-card Span
 
 Initial behavior:
 - The deck starts stacked face down.
-- Tapping the top card removes it from the stack, moves it to the side, and flips it face up.
+- Dragging from the deck takes the top card, removes it from the stack, and lets the user drop it anywhere on the table face down.
+- Drawn cards stay where the user drops them, can be dragged again to reposition them on the table, and can be flipped by double clicking/tapping them.
+- Table stacking order is interaction-driven: touching or dragging any table card brings it to the front so any card can cover any other card.
 - The deck has 50 cards: suits Oro, Copa, Basto, Espada with ranks 1 through 12, plus 2 jokers.
 - Card backs should feel traditional, using a blue or red pattern.
 - The UI should feel fresh, modern, and mobile-first.
@@ -42,7 +44,7 @@ Spanish suits:
 Deck:
 - Cards are ordered and shuffled by the backend/use case.
 - Jokers are represented as `joker-red` and `joker-blue`.
-- A drawn card should remain visible in the discard area.
+- A drawn card should remain visible face down at its table position until the user explicitly flips it; there is no fixed discard area for newly drawn cards.
 
 ## Development Preferences
 
