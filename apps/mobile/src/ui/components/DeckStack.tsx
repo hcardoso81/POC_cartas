@@ -11,6 +11,7 @@ type Props = {
 
 export function DeckStack({ remaining, disabled, onDrop }: Props) {
   const drag = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const hasDragged = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const canDrag = !disabled && remaining > 0;
 
@@ -18,19 +19,29 @@ export function DeckStack({ remaining, disabled, onDrop }: Props) {
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => canDrag,
-        onMoveShouldSetPanResponder: (_event, gesture) => canDrag && (Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3),
+        onMoveShouldSetPanResponder: () => canDrag,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          setIsDragging(true);
+          hasDragged.current = false;
+          setIsDragging(false);
           drag.setValue({ x: 0, y: 0 });
         },
-        onPanResponderMove: Animated.event([null, { dx: drag.x, dy: drag.y }], {
-          useNativeDriver: false
-        }),
+        onPanResponderMove: (_event, gesture) => {
+          const movedEnough = Math.abs(gesture.dx) > 4 || Math.abs(gesture.dy) > 4;
+
+          if (movedEnough) {
+            hasDragged.current = true;
+            setIsDragging(true);
+            drag.setValue({ x: gesture.dx, y: gesture.dy });
+          }
+        },
         onPanResponderRelease: (_event, gesture) => {
+          const movedEnough = hasDragged.current || Math.abs(gesture.dx) > 8 || Math.abs(gesture.dy) > 8;
+
           setIsDragging(false);
           drag.setValue({ x: 0, y: 0 });
 
-          if (Math.abs(gesture.dx) < 8 && Math.abs(gesture.dy) < 8) {
+          if (!movedEnough) {
             return;
           }
 
@@ -38,6 +49,7 @@ export function DeckStack({ remaining, disabled, onDrop }: Props) {
         },
         onPanResponderTerminate: () => {
           setIsDragging(false);
+          hasDragged.current = false;
           drag.setValue({ x: 0, y: 0 });
         }
       }),

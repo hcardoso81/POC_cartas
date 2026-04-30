@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, PanResponder, Pressable, StyleSheet } from "react-native";
+import { Animated, PanResponder, StyleSheet } from "react-native";
 import type { Card } from "../../core/domain/Card";
 import { CardBack } from "./CardBack";
 import { PlayingCard } from "./PlayingCard";
@@ -18,60 +18,11 @@ export function AnimatedDrawnCard({ card, x, y, zIndex, onFocus, onMove }: Props
   const drag = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const flipProgress = useRef(new Animated.Value(0)).current;
   const lastPressAt = useRef(0);
+  const hasDragged = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isFaceUp, setIsFaceUp] = useState(false);
 
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gesture) => Math.abs(gesture.dx) > 3 || Math.abs(gesture.dy) > 3,
-        onPanResponderGrant: () => {
-          onFocus();
-          setIsDragging(true);
-          drag.extractOffset();
-          drag.setValue({ x: 0, y: 0 });
-        },
-        onPanResponderMove: Animated.event([null, { dx: drag.x, dy: drag.y }], {
-          useNativeDriver: false
-        }),
-        onPanResponderRelease: (_event, gesture) => {
-          drag.setValue({ x: 0, y: 0 });
-          setIsDragging(false);
-          onMove({ x: x + gesture.dx, y: y + gesture.dy });
-        },
-        onPanResponderTerminate: () => {
-          drag.setValue({ x: 0, y: 0 });
-          setIsDragging(false);
-        }
-      }),
-    [drag, onFocus, onMove, x, y]
-  );
-
-  useEffect(() => {
-    progress.setValue(0);
-    flipProgress.setValue(0);
-    drag.setValue({ x: 0, y: 0 });
-    drag.setOffset({ x: 0, y: 0 });
-    setIsDragging(false);
-    setIsFaceUp(false);
-
-    Animated.spring(progress, {
-      toValue: 1,
-      friction: 8,
-      tension: 65,
-      useNativeDriver: true
-    }).start();
-  }, [card.id, drag, flipProgress, progress]);
-
-  function handlePress() {
-    const now = Date.now();
-
-    if (now - lastPressAt.current > 320) {
-      lastPressAt.current = now;
-      return;
-    }
-
-    lastPressAt.current = 0;
+  function toggleFace() {
     const nextFaceUp = !isFaceUp;
 
     setIsFaceUp(nextFaceUp);
@@ -82,6 +33,78 @@ export function AnimatedDrawnCard({ card, x, y, zIndex, onFocus, onMove }: Props
       useNativeDriver: true
     }).start();
   }
+
+  function handleTap() {
+    const now = Date.now();
+
+    if (now - lastPressAt.current > 360) {
+      lastPressAt.current = now;
+      return;
+    }
+
+    lastPressAt.current = 0;
+    toggleFace();
+  }
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderGrant: () => {
+          onFocus();
+          hasDragged.current = false;
+          setIsDragging(false);
+          drag.extractOffset();
+          drag.setValue({ x: 0, y: 0 });
+        },
+        onPanResponderMove: (_event, gesture) => {
+          const movedEnough = Math.abs(gesture.dx) > 4 || Math.abs(gesture.dy) > 4;
+
+          if (movedEnough) {
+            hasDragged.current = true;
+            setIsDragging(true);
+            drag.setValue({ x: gesture.dx, y: gesture.dy });
+          }
+        },
+        onPanResponderRelease: (_event, gesture) => {
+          const movedEnough = hasDragged.current || Math.abs(gesture.dx) > 6 || Math.abs(gesture.dy) > 6;
+
+          drag.setValue({ x: 0, y: 0 });
+          setIsDragging(false);
+
+          if (movedEnough) {
+            onMove({ x: x + gesture.dx, y: y + gesture.dy });
+            return;
+          }
+
+          handleTap();
+        },
+        onPanResponderTerminate: () => {
+          drag.setValue({ x: 0, y: 0 });
+          setIsDragging(false);
+        }
+      }),
+    [drag, handleTap, onFocus, onMove, x, y]
+  );
+
+  useEffect(() => {
+    progress.setValue(0);
+    flipProgress.setValue(0);
+    drag.setValue({ x: 0, y: 0 });
+    drag.setOffset({ x: 0, y: 0 });
+    hasDragged.current = false;
+    setIsDragging(false);
+    setIsFaceUp(false);
+
+    Animated.spring(progress, {
+      toValue: 1,
+      friction: 8,
+      tension: 65,
+      useNativeDriver: true
+    }).start();
+  }, [card.id, drag, flipProgress, progress]);
 
   const entranceTranslateX = progress.interpolate({
     inputRange: [0, 1],
@@ -132,14 +155,12 @@ export function AnimatedDrawnCard({ card, x, y, zIndex, onFocus, onMove }: Props
         }
       ]}
     >
-      <Pressable onPress={handlePress} onPressIn={onFocus} style={styles.pressable}>
-        <Animated.View style={[styles.side, { opacity: backOpacity, transform: [{ rotateY: backRotateY }] }]}>
-          <CardBack />
-        </Animated.View>
-        <Animated.View style={[styles.side, { opacity: frontOpacity, transform: [{ rotateY: frontRotateY }] }]}>
-          <PlayingCard card={card} />
-        </Animated.View>
-      </Pressable>
+      <Animated.View style={[styles.side, { opacity: backOpacity, transform: [{ rotateY: backRotateY }] }]}>
+        <CardBack />
+      </Animated.View>
+      <Animated.View style={[styles.side, { opacity: frontOpacity, transform: [{ rotateY: frontRotateY }] }]}>
+        <PlayingCard card={card} />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -149,9 +170,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 156,
     height: 224
-  },
-  pressable: {
-    flex: 1
   },
   side: {
     ...StyleSheet.absoluteFillObject,
