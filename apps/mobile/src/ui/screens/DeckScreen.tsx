@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } fr
 import type { Card } from "../../core/domain/Card";
 import type { Deck } from "../../core/domain/Deck";
 import { drawTopCard } from "../../core/use-cases/drawTopCard";
+import type { DeckSize } from "../../core/use-cases/createSpanishDeck";
 import { createDeckRepository } from "../../infrastructure/repositories/createDeckRepository";
 import { cardFaceDesigns, type CardFaceDesignId } from "../card-designs/cardFaceDesigns";
 import { AnimatedDrawnCard } from "../components/AnimatedDrawnCard";
@@ -29,23 +30,27 @@ export function DeckScreen() {
   const [tableSize, setTableSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
   const [backColor, setBackColor] = useState<CardBackColor>("blue");
-  const [faceDesign, setFaceDesign] = useState<CardFaceDesignId>("modern");
+  const [faceDesign, setFaceDesign] = useState<CardFaceDesignId>("traditional");
+  const [deckSize, setDeckSize] = useState<DeckSize>(40);
+  const [pendingDeckSize, setPendingDeckSize] = useState<DeckSize | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-
-    repository.createDeck().then((createdDeck) => {
-      if (mounted) {
+  const resetTable = useCallback(
+    (nextDeckSize: DeckSize) => {
+      setLoading(true);
+      repository.createDeck(nextDeckSize).then((createdDeck) => {
         setDeck(createdDeck);
+        setPlacedCards([]);
+        setDeckSize(nextDeckSize);
         setLoading(false);
-      }
-    });
+      });
+    },
+    [repository]
+  );
 
-    return () => {
-      mounted = false;
-    };
-  }, [repository]);
+  useEffect(() => {
+    resetTable(40);
+  }, [resetTable]);
 
   const clampToTable = useCallback(
     (x: number, y: number) => ({
@@ -95,6 +100,60 @@ export function DeckScreen() {
       return [...current.filter((placed) => placed.card.id !== cardId), selectedCard];
     });
   }, []);
+
+  const handleDeckSizeChange = useCallback(
+    (nextDeckSize: DeckSize) => {
+      if (nextDeckSize === deckSize) {
+        return;
+      }
+
+      setPendingDeckSize(nextDeckSize);
+    },
+    [deckSize]
+  );
+
+  const handleConfirmDeckSizeChange = useCallback(() => {
+    if (!pendingDeckSize) {
+      return;
+    }
+
+    resetTable(pendingDeckSize);
+    setPendingDeckSize(null);
+    setSettingsOpen(false);
+  }, [pendingDeckSize, resetTable]);
+
+  const handleCancelDeckSizeChange = useCallback(() => {
+    setPendingDeckSize(null);
+  }, []);
+
+  const requestedDeckSizeLabel = pendingDeckSize ? `${pendingDeckSize} cartas` : "";
+
+  const renderConfirmation = () => (
+    <View style={styles.confirmBackdrop}>
+      <View style={styles.confirmDialog}>
+        <Text style={styles.confirmTitle}>Reiniciar mesa</Text>
+        <Text style={styles.confirmMessage}>
+          Los cambios se perderan. Si confirmas, se reiniciara la mesa con la configuracion de {requestedDeckSizeLabel}.
+        </Text>
+        <View style={styles.confirmActions}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleCancelDeckSizeChange}
+            style={({ pressed }) => [styles.confirmButton, styles.cancelButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handleConfirmDeckSizeChange}
+            style={({ pressed }) => [styles.confirmButton, styles.acceptButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.acceptButtonText}>Confirmar</Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -156,6 +215,25 @@ export function DeckScreen() {
                     );
                   })}
                 </View>
+
+                <Text style={styles.settingsLabel}>Cartas</Text>
+                <View style={styles.segmented}>
+                  {([40, 50] as DeckSize[]).map((option) => {
+                    const selected = option === deckSize;
+
+                    return (
+                      <Pressable
+                        key={option}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        onPress={() => handleDeckSizeChange(option)}
+                        style={[styles.segment, selected && styles.segmentSelected]}
+                      >
+                        <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{option}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
             ) : null}
           </View>
@@ -197,6 +275,7 @@ export function DeckScreen() {
             </View>
           )}
         </View>
+        {pendingDeckSize ? renderConfirmation() : null}
       </View>
     </SafeAreaView>
   );
@@ -341,6 +420,63 @@ const styles = StyleSheet.create({
   designOptionText: {
     color: colors.muted,
     fontFamily: "Inter_600SemiBold",
+    fontSize: 13
+  },
+  confirmBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5,
+    backgroundColor: "rgba(7,20,33,0.54)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24
+  },
+  confirmDialog: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "rgba(7,20,33,0.14)",
+    padding: 16,
+    gap: 12
+  },
+  confirmTitle: {
+    color: colors.ink,
+    fontFamily: "Inter_700Bold",
+    fontSize: 18
+  },
+  confirmMessage: {
+    color: colors.muted,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    lineHeight: 20
+  },
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8
+  },
+  confirmButton: {
+    minHeight: 40,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14
+  },
+  cancelButton: {
+    backgroundColor: "#EEF2F7"
+  },
+  acceptButton: {
+    backgroundColor: colors.red
+  },
+  cancelButtonText: {
+    color: colors.ink,
+    fontFamily: "Inter_700Bold",
+    fontSize: 13
+  },
+  acceptButtonText: {
+    color: "#FFFFFF",
+    fontFamily: "Inter_700Bold",
     fontSize: 13
   },
   table: {

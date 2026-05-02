@@ -2,15 +2,18 @@
 
 ## Project Goal
 
-Build a simple Expo + React Native proof of concept for animating a 50-card Spanish deck.
+Build a simple Expo + React Native proof of concept for animating a configurable Spanish deck.
 
 Initial behavior:
 - The deck starts stacked face down.
 - Dragging from the deck takes the top card, removes it from the stack, and lets the user drop it anywhere on the table face down.
 - Drawn cards stay where the user drops them, can be dragged again to reposition them on the table, and can be flipped by double clicking/tapping them.
 - Table stacking order is interaction-driven: touching or dragging any table card brings it to the front so any card can cover any other card.
-- The deck has 50 cards: suits Oro, Copa, Basto, Espada with ranks 1 through 12, plus 2 jokers.
-- Card backs should feel traditional, using a blue or red pattern.
+- The deck defaults to 40 cards: suits Oro, Copa, Basto, Espada with ranks 1 through 7, 10, 11, and 12.
+- The app can switch to a 50-card deck: ranks 1 through 12 for each suit, plus 2 jokers.
+- Changing between 40 and 50 cards must warn that table changes will be lost; confirming recreates the deck and clears the table.
+- Card backs should feel traditional, using the same pattern in blue or red. Blue is the default.
+- Settings live in the top-right menu and currently control card back color, face design, and deck size.
 - The UI should feel fresh, modern, and mobile-first.
 
 ## Architecture
@@ -32,6 +35,7 @@ Mobile:
 - `apps/mobile` is an Expo app using React Native and TypeScript.
 - Use `react-native-svg` for drawing custom Spanish-suit card faces.
 - Use React Native animation primitives for the first prototype unless a stronger animation need appears.
+- UI settings are screen-level state in `src/ui/screens/DeckScreen.tsx`; keep domain/use cases independent from presentation state.
 
 ## Product Notes
 
@@ -43,8 +47,26 @@ Spanish suits:
 
 Deck:
 - Cards are ordered and shuffled by the backend/use case.
+- `DeckSize` is `40 | 50` in both mobile and server deck creation use cases.
+- 40-card decks exclude ranks 8 and 9 and exclude jokers.
+- 50-card decks include ranks 8 and 9 and include `joker-red` and `joker-blue`.
 - Jokers are represented as `joker-red` and `joker-blue`.
 - A drawn card should remain visible face down at its table position until the user explicitly flips it; there is no fixed discard area for newly drawn cards.
+
+Card visuals:
+- Card faces are design-driven. Current face designs are registered in `apps/mobile/src/ui/card-designs/cardFaceDesigns.ts`.
+- `modern` is the simpler proof-of-concept face.
+- `traditional` tries to resemble a classic Spanish deck.
+- In the traditional design, ranks 1 through 9 render the actual count of suit symbols.
+- Rank 10 is Sota, rank 11 is Caballo, and rank 12 is Rey. These figures should keep the same base character composition while changing the carried suit symbol.
+- Future themed decks, such as traditional image references or Star Wars-style cards, should plug in as another face design while preserving the same domain suits and ranks.
+
+Card backs:
+- Card backs are rendered in `apps/mobile/src/ui/components/CardBack.tsx` with `react-native-svg`.
+- The current supported back colors are `blue` and `red`; both use the same pattern.
+
+Generated files:
+- Runtime logs (`*.log`) should be ignored by Git and should not be committed.
 
 ## Development Preferences
 

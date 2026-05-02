@@ -112,7 +112,7 @@ export function PlayingCard({ card, faceDesign = "modern" }: Props) {
         ) : (
           <View style={styles.figureField}>
             <CourtFigure rank={card.rank} suit={card.suit} />
-            <Text style={styles.figureSuit}>{suitLabels[card.suit]}</Text>
+            
           </View>
         )}
 
@@ -134,7 +134,6 @@ function Corner({ rank, suitName, inverted }: { rank: number; suitName: string; 
   return (
     <View style={[styles.cornerBlock, inverted && styles.inverted]}>
       <Text style={styles.corner}>{rank}</Text>
-      <Text style={styles.suitName}>{suitName}</Text>
     </View>
   );
 }
@@ -144,28 +143,37 @@ function CourtFigure({ rank, suit }: { rank: number; suit: SpanishSuit }) {
     return (
       <View style={styles.courtWrap}>
         <Svg width="100%" height="100%" viewBox="0 0 100 140">
-          <Ellipse cx="48" cy="119" rx="38" ry="7" fill="#D9B44F" opacity="0.38" />
-          <Path d="M14 88c5-23 21-35 44-31 16 3 26 13 29 26 2 11-3 22-14 26-9 4-20 1-28-7-7-8-17-8-31-4z" fill="#B7834E" stroke="#5E3A24" strokeWidth="3" />
-          <Path d="M19 83c2-16 12-25 29-27 16-1 29 7 35 22-20-8-43-7-64 5z" fill="#E7C587" />
-          <Path d="M17 91c9 6 17 7 25 3 10-5 18-3 26 6" fill="none" stroke="#754628" strokeWidth="4" strokeLinecap="round" />
-          <Path d="M77 82c5 4 7 12 4 18" fill="none" stroke="#5E3A24" strokeWidth="4" strokeLinecap="round" />
-          <Circle cx="25" cy="70" r="4" fill="#182333" />
-          <Path d="M13 68c6-11 13-16 23-16 7 0 12 3 15 8-8 2-18 5-30 11z" fill="#F0E1C1" stroke="#5E3A24" strokeWidth="3" />
-          <Path d="M21 52c-5-5-9-10-9-17 9 2 15 7 19 16z" fill="#F0E1C1" stroke="#5E3A24" strokeWidth="3" />
-          <Line x1="32" y1="103" x2="25" y2="128" stroke="#5E3A24" strokeWidth="6" strokeLinecap="round" />
-          <Line x1="64" y1="104" x2="72" y2="128" stroke="#5E3A24" strokeWidth="6" strokeLinecap="round" />
-          <Line x1="25" y1="128" x2="15" y2="130" stroke="#2E4F2B" strokeWidth="5" strokeLinecap="round" />
-          <Line x1="72" y1="128" x2="83" y2="130" stroke="#2E4F2B" strokeWidth="5" strokeLinecap="round" />
-          <Path d="M49 44c14 7 21 21 19 43l-32 1c-4-18 0-34 13-44z" fill="#68B7D8" stroke="#234D64" strokeWidth="3" />
-          <Path d="M39 61l27 5 2 18H35z" fill="#D64B2F" opacity="0.9" />
-          <Path d="M38 47c6-13 21-13 27-1-6 8-18 9-27 1z" fill="#DDA66C" stroke="#6B442C" strokeWidth="3" />
-          <Path d="M38 35c10-9 21-6 29 4-6 1-11 0-16-3-3 4-7 5-13 4z" fill="#8B4B29" />
-          <Path d="M34 37c8-12 21-15 35-5" fill="none" stroke="#D9AE37" strokeWidth="5" strokeLinecap="round" />
-          <Path d="M35 50c-7 7-10 16-9 28" fill="none" stroke="#4B9D54" strokeWidth="7" strokeLinecap="round" />
-          <Path d="M70 50c7 10 9 21 6 34" fill="none" stroke="#4B9D54" strokeWidth="7" strokeLinecap="round" />
+          <Ellipse cx="51" cy="124" rx="36" ry="7" fill="#D9B44F" opacity="0.38" />
+          <Path d="M20 83c7-19 21-28 41-24 15 3 25 13 29 27 3 12-2 22-14 26-12 4-23-1-31-12-6-8-14-8-25-3z" fill="#E4C248" stroke="#335A28" strokeWidth="3" />
+          <Path d="M28 76c13-8 30-9 52-2 3 5 5 10 5 15-20-8-40-8-60 2z" fill="#72B84A" stroke="#335A28" strokeWidth="2" />
+          <Path d="M28 88c11 5 20 5 28 1 9-5 17-2 26 7" fill="none" stroke="#C43D32" strokeWidth="4" strokeLinecap="round" />
+          <Path d="M77 77c6 4 9 12 8 22" fill="none" stroke="#335A28" strokeWidth="4" strokeLinecap="round" />
+          <Path d="M16 68c5-12 13-19 24-19 8 0 15 4 19 12-11 0-24 4-40 12z" fill="#E9C746" stroke="#335A28" strokeWidth="3" />
+          <Path d="M22 51c-5-6-7-12-6-20 8 4 13 10 16 18z" fill="#E9C746" stroke="#335A28" strokeWidth="3" />
+          <Circle cx="27" cy="65" r="3" fill="#182333" />
+          <Path d="M20 75c8 0 14-2 19-7" fill="none" stroke="#335A28" strokeWidth="2" strokeLinecap="round" />
+          <Line x1="34" y1="100" x2="25" y2="130" stroke="#335A28" strokeWidth="6" strokeLinecap="round" />
+          <Line x1="66" y1="101" x2="75" y2="130" stroke="#335A28" strokeWidth="6" strokeLinecap="round" />
+          <Line x1="25" y1="130" x2="15" y2="132" stroke="#182333" strokeWidth="5" strokeLinecap="round" />
+          <Line x1="75" y1="130" x2="87" y2="132" stroke="#182333" strokeWidth="5" strokeLinecap="round" />
+          <Rect x="31" y="82" width="42" height="17" rx="3" fill="#E7C843" stroke="#7B6715" strokeWidth="2" />
+          <Circle cx="39" cy="90" r="3" fill="#D94435" />
+          <Circle cx="51" cy="90" r="3" fill="#4B9D54" />
+          <Circle cx="63" cy="90" r="3" fill="#D94435" />
+          <Path d="M48 43c11 7 16 20 15 40l-28 1c-4-18 0-31 13-41z" fill="#2E8B45" stroke="#1E5130" strokeWidth="3" />
+          <Path d="M38 60l25 4 1 17H34z" fill="#D64B2F" opacity="0.95" />
+          <Path d="M40 44c6-12 18-12 24 0-5 8-18 8-24 0z" fill="#F0C083" stroke="#6B442C" strokeWidth="3" />
+          <Path d="M37 34c8-8 20-8 30 0-6 2-11 2-16 0-4 4-8 5-14 4z" fill="#202C62" />
+          <Path d="M33 34c8-8 18-12 29-10" fill="none" stroke="#D94435" strokeWidth="5" strokeLinecap="round" />
+          <Path d="M61 26c8 1 12 5 13 12" fill="none" stroke="#E7C843" strokeWidth="5" strokeLinecap="round" />
+          <Path d="M37 47c-7 7-9 16-7 27" fill="none" stroke="#2E8B45" strokeWidth="7" strokeLinecap="round" />
+          <Path d="M64 47c7 9 9 20 6 32" fill="none" stroke="#2E8B45" strokeWidth="7" strokeLinecap="round" />
+          <Path d="M41 82c4 10 8 20 12 32" fill="none" stroke="#C43D32" strokeWidth="6" strokeLinecap="round" />
+          <Path d="M60 82c-1 11-2 21-2 33" fill="none" stroke="#C43D32" strokeWidth="6" strokeLinecap="round" />
+          <Line x1="53" y1="114" x2="46" y2="120" stroke="#E7C843" strokeWidth="4" strokeLinecap="round" />
         </Svg>
-        <View style={styles.courtSuitBadge}>
-          <SuitMark suit={suit} size={34} design="traditional" />
+        <View style={styles.horseSuitBadge}>
+          <SuitMark suit={suit} size={46} design="traditional" />
         </View>
       </View>
     );
@@ -204,7 +212,6 @@ function CourtFigure({ rank, suit }: { rank: number; suit: SpanishSuit }) {
       <View style={rank === 12 ? styles.kingSuit : styles.courtSuitBadge}>
         <SuitMark suit={suit} size={rank === 12 ? 42 : 36} design="traditional" />
       </View>
-      <Text style={styles.courtTitle}>{faceTitleByRank[rank]}</Text>
     </View>
   );
 }
@@ -254,8 +261,7 @@ const styles = StyleSheet.create({
   pipField: {
     ...StyleSheet.absoluteFillObject,
     margin: 22,
-    borderWidth: 1,
-    borderColor: "#CDD2D8"
+    
   },
   pip: {
     position: "absolute",
@@ -269,8 +275,6 @@ const styles = StyleSheet.create({
   figureField: {
     width: 112,
     height: 156,
-    borderWidth: 1,
-    borderColor: "#CDD2D8",
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden"
@@ -295,6 +299,15 @@ const styles = StyleSheet.create({
     left: 4,
     width: 38,
     height: 38,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  horseSuitBadge: {
+    position: "absolute",
+    top: 15,
+    left: 3,
+    width: 52,
+    height: 52,
     alignItems: "center",
     justifyContent: "center"
   },
