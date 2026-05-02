@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, PanResponder, StyleSheet } from "react-native";
 import type { Card } from "../../core/domain/Card";
+import type { CardFaceDesignId } from "../card-designs/cardFaceDesigns";
 import { CardBack, type CardBackColor } from "./CardBack";
 import { PlayingCard } from "./PlayingCard";
 
 type Props = {
   card: Card;
   backColor: CardBackColor;
+  faceDesign: CardFaceDesignId;
   x: number;
   y: number;
   zIndex: number;
@@ -14,7 +16,7 @@ type Props = {
   onMove(position: { x: number; y: number }): void;
 };
 
-export function AnimatedDrawnCard({ card, backColor, x, y, zIndex, onFocus, onMove }: Props) {
+export function AnimatedDrawnCard({ card, backColor, faceDesign, x, y, zIndex, onFocus, onMove }: Props) {
   const progress = useRef(new Animated.Value(0)).current;
   const drag = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const flipProgress = useRef(new Animated.Value(0)).current;
@@ -160,7 +162,7 @@ export function AnimatedDrawnCard({ card, backColor, x, y, zIndex, onFocus, onMo
         <CardBack color={backColor} />
       </Animated.View>
       <Animated.View style={[styles.side, { opacity: frontOpacity, transform: [{ rotateY: frontRotateY }] }]}>
-        <PlayingCard card={card} />
+        <PlayingCard card={card} faceDesign={faceDesign} />
       </Animated.View>
     </Animated.View>
   );

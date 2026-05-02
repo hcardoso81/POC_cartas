@@ -4,6 +4,7 @@ import type { Card } from "../../core/domain/Card";
 import type { Deck } from "../../core/domain/Deck";
 import { drawTopCard } from "../../core/use-cases/drawTopCard";
 import { createDeckRepository } from "../../infrastructure/repositories/createDeckRepository";
+import { cardFaceDesigns, type CardFaceDesignId } from "../card-designs/cardFaceDesigns";
 import { AnimatedDrawnCard } from "../components/AnimatedDrawnCard";
 import type { CardBackColor } from "../components/CardBack";
 import { DeckStack } from "../components/DeckStack";
@@ -28,6 +29,7 @@ export function DeckScreen() {
   const [tableSize, setTableSize] = useState({ width: 0, height: 0 });
   const [loading, setLoading] = useState(true);
   const [backColor, setBackColor] = useState<CardBackColor>("blue");
+  const [faceDesign, setFaceDesign] = useState<CardFaceDesignId>("modern");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -135,6 +137,25 @@ export function DeckScreen() {
                     );
                   })}
                 </View>
+
+                <Text style={styles.settingsLabel}>Cara</Text>
+                <View style={styles.designList}>
+                  {cardFaceDesigns.map((design) => {
+                    const selected = design.id === faceDesign;
+
+                    return (
+                      <Pressable
+                        key={design.id}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        onPress={() => setFaceDesign(design.id)}
+                        style={[styles.designOption, selected && styles.designOptionSelected]}
+                      >
+                        <Text style={[styles.designOptionText, selected && styles.segmentTextSelected]}>{design.label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
             ) : null}
           </View>
@@ -156,6 +177,7 @@ export function DeckScreen() {
                   key={placed.card.id}
                   card={placed.card}
                   backColor={backColor}
+                  faceDesign={faceDesign}
                   x={placed.x}
                   y={placed.y}
                   zIndex={index + 1}
@@ -249,7 +271,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 48,
     right: 0,
-    width: 178,
+    width: 196,
     borderRadius: 8,
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
@@ -300,6 +322,26 @@ const styles = StyleSheet.create({
   },
   redSwatch: {
     backgroundColor: colors.red
+  },
+  designList: {
+    gap: 6
+  },
+  designOption: {
+    minHeight: 34,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#E0E6EE",
+    justifyContent: "center",
+    paddingHorizontal: 10
+  },
+  designOptionSelected: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#B8C4D2"
+  },
+  designOptionText: {
+    color: colors.muted,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13
   },
   table: {
     flex: 1,
