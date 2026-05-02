@@ -1,15 +1,16 @@
 import { useMemo, useRef, useState } from "react";
 import { Animated, PanResponder, StyleSheet, View } from "react-native";
-import { CardBack } from "./CardBack";
+import { CardBack, type CardBackColor } from "./CardBack";
 import { shadow } from "../theme/tokens";
 
 type Props = {
   remaining: number;
+  backColor: CardBackColor;
   disabled?: boolean;
   onDrop(point: { pageX: number; pageY: number }): void;
 };
 
-export function DeckStack({ remaining, disabled, onDrop }: Props) {
+export function DeckStack({ remaining, backColor, disabled, onDrop }: Props) {
   const drag = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const hasDragged = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -63,10 +64,10 @@ export function DeckStack({ remaining, disabled, onDrop }: Props) {
       {...panResponder.panHandlers}
     >
       <View style={[styles.offset, styles.offsetTwo]}>
-        <CardBack />
+        <CardBack color={backColor} />
       </View>
       <View style={[styles.offset, styles.offsetOne]}>
-        <CardBack />
+        <CardBack color={backColor} />
       </View>
       <Animated.View
         style={[
@@ -78,7 +79,7 @@ export function DeckStack({ remaining, disabled, onDrop }: Props) {
           }
         ]}
       >
-        <CardBack />
+        <CardBack color={backColor} />
       </Animated.View>
     </View>
   );
