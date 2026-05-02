@@ -1,4 +1,2 @@
-node_modules
-mobile.log
-server.log
-server.err.log
+node_modules/
+*.log
